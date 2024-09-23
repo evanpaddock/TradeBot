@@ -1,18 +1,14 @@
-from flask import Flask, render_template
 from dotenv import load_dotenv
 import os
-
-load_dotenv()
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-
-print(os.getenv("APP_KEY"))
+from schwab.auth import client_from_login_flow
+from schwab.orders.equities import equity_buy_market
 
 if __name__ == "__main__":
-    app.run()
+    load_dotenv()
+    
+    client = client_from_login_flow(
+        os.getenv("APP_KEY"),
+        os.getenv("APP_SECRET"),
+        os.getenv("CALLBACK_URL"),
+        "./token.json",
+    )
