@@ -8,7 +8,6 @@ from schwab.orders.equities import (
 from .Notification import send_sms_via_email
 import json
 import os
-from schwab.client import base
 
 
 def write_transation(order_id: int, symbol: str, quantity: int):
@@ -81,7 +80,7 @@ def cancel_order(
 
 def cancel_all_open_orders(client: Client, account_hash: str):
     open_orders = client.get_orders_for_account(
-        account_hash, status=base.BaseClient.Order.Status.PENDING_ACTIVATION
+        account_hash, status=client.Order.Status.PENDING_ACTIVATION
     ).json()
     for open_order in open_orders:
         symbol = open_order["orderLegCollection"][0]["instrument"]["symbol"]
