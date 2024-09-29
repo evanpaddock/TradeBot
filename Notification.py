@@ -1,10 +1,11 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
+import time
 
 
 def send_sms_via_email(
-    message,
+    messages,
     phone_number=os.getenv("PHONE_NUMBER"),
     carrier_gateway=os.getenv("CARRIER_GATEWAY"),
     sender_email=os.getenv("SENDER_EMAIL"),
@@ -14,7 +15,12 @@ def send_sms_via_email(
 ):
     # Construct the email
     to_number = f"{phone_number}@{carrier_gateway}"
-    msg = MIMEText(message)
+
+    final_message = ""
+    for message in messages:
+        final_message += message
+
+    msg = MIMEText(final_message)
     msg["From"] = sender_email
     msg["To"] = to_number
     msg["Subject"] = subject
@@ -32,3 +38,4 @@ def send_sms_via_email(
         print(f"Failed to send SMS: {e}")
     finally:
         server.quit()
+        time.sleep(5)
