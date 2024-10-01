@@ -18,5 +18,4 @@ def get_client():
     app_secret = os.getenv("APP_SECRET")
     callback_url = os.getenv("CALLBACK_URL")
     token_path = os.getenv("TOKEN_PATH")
-
     return easy_client(api_key, app_secret, callback_url, token_path)

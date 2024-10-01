@@ -17,7 +17,7 @@ load_dotenv(".env")
 # Setup client and account_hash by calling the Account setup function
 client, account_hash = Account.setup()
 
-# Example of sending an SMS notification (currently commented out)
+# Example of sending an SMS notification
 # Notification.send_sms_via_email(f"App successfully running for client: {client.get_account_numbers().json()[0]['accountNumber']}")
 
 

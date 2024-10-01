@@ -26,16 +26,12 @@ def send_sms_via_email(
     msg["Subject"] = subject
 
     try:
-        # Connect to the SMTP server
-        server = smtplib.SMTP(host=host, port=587)
-        server.starttls()
-        server.login(sender_email, sender_email_password)
-
-        # Send the email
-        server.sendmail(sender_email, to_number, msg.as_string())
-        print("SMS sent successfully!")
+        with smtplib.SMTP(host, 587) as server:
+            server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
+            server.login(sender_email, sender_email_password)  # Log in to your Gmail account
+            server.sendmail(sender_email, to_number, msg.as_string())  # Send the email
+            print("Message sent successfully!")
     except Exception as e:
         print(f"Failed to send SMS: {e}")
     finally:
-        server.quit()
-        time.sleep(5)
+        time.sleep(2.5)
