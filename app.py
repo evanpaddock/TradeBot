@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-import Order, Account, Notification, Utils  # Importing custom modules used in the application
+import order, Account, Notification, Utils  # Importing custom modules used in the application
 from flask import (
     Flask,
     make_response,

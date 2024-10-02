@@ -1,3 +1,4 @@
+import httpx
 from schwab.auth import Client
 from schwab.orders.equities import (
     equity_buy_limit,
@@ -9,14 +10,59 @@ import Notification
 
 
 class Order:
+    """
+    A class representing an order.
+
+    Attributes:
+        client (schwab.auth.Client): The client account.
+        account_hash? (int): The hashed ID value of the account.
+        symbol? (str): The symbol of the share.
+        quantity? (int): The quantity of shares.
+        price? (float): The limit price of the order.
+        order_id? (int): The ID of the order.
+        status? (Client.Order.Status): The status of the order.
+    """
+
     def __init__(
-        self, client, account_hash, symbol, quantity, price=None, order_id=None
+        self,
+        client: Client,
+        account_hash: str = None,
+        symbol: str = None,
+        quantity: int = 0,
+        price: float = None,
+        order_id: int = None,
+        status: Client.Order.Status = None,
     ):
+        """
+        Initializes an Order object.
+
+        Parameters:
+            client (schwab.auth.Client): The client account.
+            account_hash? (int): The hashed ID value of the account.
+            symbol? (str): The symbol of the share.
+            quantity? (int): The quantity of shares.
+            price? (float): The limit price of the order.
+            order_id? (int): The ID of the order.
+            status? (Client.Order.Status): The status of the order.
+        """
         self.client = client
         self.account_hash = account_hash
         self.symbol = symbol
         self.quantity = quantity
         self.price = price
+        self.order_id = order_id
+        self.status = status
+
+    def __str__(self):
+        """
+        Print Current Order Details
+        """
+        message = ""
+
+        for field, value in vars(self).items():
+            message += f"{field}: {value}"
+
+        return message
 
     def buy(self):
         if self.price:
@@ -49,8 +95,34 @@ class Order:
         Notification.send_sms_via_email(message)
 
     def cancel(self):
-        # TODO Finish cancel
-        pass
+        self.client.cancel_order(self.order_id, self.account_hash)
+
+        self.get_order()
+
+    def get_order(self):
+        """
+        Sets an order object to the details retreived by getting the order by its order_id
+
+        Parameters:
+            self.order_id (str): The order_id to retrieve.
+            self.client (schwab.auth.Client): The client object to access an account.
+            self.account_hash (str): The hashed account id given by schwab.
+
+        Returns:
+            None: Sets the object self values to the order details retrieved.
+        """
+        resp = self.client.get_order(self.order_id, self.account_hash)
+        assert resp.status_code == httpx.codes.OK
+        order_details = resp.json()
+
+        if order_details:
+            self.symbol = order_details["orderLegCollection"][0]["instrument"]["symbol"]
+            self.quantity = order_details["quantity"]
+            self.filled_quantity = order_details["filledQuantity"]
+            self.remaining_quantity = order_details["remainingQuantity"]
+            self.order_id = order_details["orderId"]
+        else:
+            raise ValueError("Order_ID is not a valid ID for any Order")
 
     @staticmethod
     def get_all_orders(
