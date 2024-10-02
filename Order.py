@@ -65,6 +65,12 @@ class Order:
         return message
 
     def buy(self):
+        if not self.symbol:
+            raise TypeError("symbol must be defined.")
+        
+        if not self.quantity:
+            raise TypeError("quantity must be defined.")
+        
         if self.price:
             order = equity_buy_limit(self.symbol, self.quantity, self.price)
         else:
@@ -77,9 +83,14 @@ class Order:
         else:
             message = f"Order to buy {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol} has failed. Please check the application for a more specific error."
 
-        Notification.send_sms_via_email(message)
+        return message
 
     def sell(self):
+        if not self.symbol:
+            raise TypeError("symbol must be defined.")
+        
+        if not self.quantity:
+            raise TypeError("quantity must be defined.")
         if self.price:
             order = equity_sell_limit(self.symbol, self.quantity, self.price)
         else:
@@ -92,9 +103,15 @@ class Order:
         else:
             message = f"Order to sell {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol} has failed. Please check the application for a more specific error."
 
-        Notification.send_sms_via_email(message)
+        return message
 
     def cancel(self):
+        if not self.order_id:
+            raise TypeError("order_id must be defined.")
+        
+        if not self.account_hash:
+            raise TypeError("account_hash must be defined.")
+        
         self.client.cancel_order(self.order_id, self.account_hash)
         self.get_order()
         
@@ -103,7 +120,7 @@ class Order:
         else:
             message = f"Order {self.order_id} for {self.quantity} shares of {self.symbol} was cancelled"
 
-        Notification.send_sms_via_email(message)
+        return message
         
 
     def get_order(self):
@@ -118,6 +135,9 @@ class Order:
         Returns:
             None: Sets the object self values to the order details retrieved.
         """
+        if not self.order_id:
+            raise TypeError("order_id must be defined.")
+        
         resp = self.client.get_order(self.order_id, self.account_hash)
         assert resp.status_code == httpx.codes.OK
         order_details = resp.json()
@@ -129,7 +149,7 @@ class Order:
             self.remaining_quantity = order_details["remainingQuantity"]
             self.order_id = order_details["orderId"]
         else:
-            raise ValueError("Order_ID is not a valid ID for any Order.")
+            raise ValueError(f"Order_ID: {self.order_id} is not a valid ID for any Order.")
 
     @staticmethod
     def get_all_orders(
@@ -148,20 +168,9 @@ class Order:
         else:
             # TODO Clean this up with Order object
             for open_order in open_orders:
-                symbol = open_order["orderLegCollection"][0]["instrument"]["symbol"]
-                quantity = open_order["quantity"]
-                filled_quantity = open_order["filledQuantity"]
-                remaining_quantity = open_order["remainingQuantity"]
-                order_id = open_order["orderId"]
-                message = cancel_order(
-                    client,
-                    order_id,
-                    account_hash,
-                    symbol,
-                    quantity,
-                    remaining_quantity,
-                    filled_quantity,
-                )
+                order = Order(client, account_hash, open_order["orderLegCollection"][0]["instrument"]["symbol"], open_order["quantity"], order_id=order_id)
+                
+                message = order.cancel()
                 messages.append(message + "<br><br>")
-        print(messages)
+                
         Notification.send_sms_via_email(messages)
