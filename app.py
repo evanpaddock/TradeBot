@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-import order, Account, Notification, Utils  # Importing custom modules used in the application
+import order, account, notification, utils  # Importing custom modules used in the application
 from flask import (
     Flask,
     make_response,
@@ -12,8 +12,8 @@ from flask import (
 # Load environment variables from .env file
 load_dotenv(".env")
 
-# Setup client and account_hash by calling the Account setup function
-client, account_hash = Account.setup()
+# Setup client and account_hash by calling the account setup function
+client, account_hash = account.setup()
 
 app = Flask(__name__)
 

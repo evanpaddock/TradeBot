@@ -6,7 +6,7 @@ from schwab.orders.equities import (
     equity_sell_limit,
     equity_sell_market,
 )
-import Notification
+import notification
 
 
 class Order:
@@ -175,4 +175,4 @@ class Order:
                 message = order.cancel()
                 messages.append(message + "<br><br>")
                 
-        Notification.send_sms_via_email(messages)
+        notification.send_sms_via_email(messages)
