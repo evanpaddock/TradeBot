@@ -11,10 +11,10 @@ import Notification
 
 class Order:
     """
-    A class representing an order.
+    A class representing a schwab order.
 
     Attributes:
-        client (schwab.auth.Client): The client account.
+        client? (schwab.auth.Client): The client account.
         account_hash? (int): The hashed ID value of the account.
         symbol? (str): The symbol of the share.
         quantity? (int): The quantity of shares.
@@ -25,7 +25,7 @@ class Order:
 
     def __init__(
         self,
-        client: Client,
+        client: Client=None,
         account_hash: str = None,
         symbol: str = None,
         quantity: int = 0,
@@ -37,7 +37,7 @@ class Order:
         Initializes an Order object.
 
         Parameters:
-            client (schwab.auth.Client): The client account.
+            client? (schwab.auth.Client): The client account.
             account_hash? (int): The hashed ID value of the account.
             symbol? (str): The symbol of the share.
             quantity? (int): The quantity of shares.
@@ -96,12 +96,19 @@ class Order:
 
     def cancel(self):
         self.client.cancel_order(self.order_id, self.account_hash)
-
         self.get_order()
+        
+        if self.filled_quanitity > 0:
+            message = f"Order {self.order_id} for {self.quantity} shares of {self.symbol} was cancelled, but {self.filled_quanitity} were filled and {self.remaining_quantity} were remianing."
+        else:
+            message = f"Order {self.order_id} for {self.quantity} shares of {self.symbol} was cancelled"
+
+        Notification.send_sms_via_email(message)
+        
 
     def get_order(self):
         """
-        Sets an order object to the details retreived by getting the order by its order_id
+        Sets an order object to the details retreived by getting the order by its order_id.
 
         Parameters:
             self.order_id (str): The order_id to retrieve.
@@ -122,56 +129,39 @@ class Order:
             self.remaining_quantity = order_details["remainingQuantity"]
             self.order_id = order_details["orderId"]
         else:
-            raise ValueError("Order_ID is not a valid ID for any Order")
+            raise ValueError("Order_ID is not a valid ID for any Order.")
 
     @staticmethod
     def get_all_orders(
         account_hash: str, client: Client, status: Client.Order.Status = None
     ):
         return client.get_orders_for_account(account_hash, status=status).json()
-
-
-def cancel_order(
-    client: Client,
-    order_id: int,
-    account_hash: str,
-    symbol: str,
-    quantity: float,
-    remaining_quantity: float = 0.0,
-    filled_quanitity: float = 0.0,
-):
-    Client.cancel_order(client, order_id, account_hash)
-    if filled_quanitity > 0:
-        message = f"Order {order_id} for {quantity} shares of {symbol} was cancelled, but {filled_quanitity} were filled and {remaining_quantity} were remianing."
-    else:
-        message = f"Order {order_id} for {quantity} shares of {symbol} was cancelled"
-
-    return message
-
-
-def cancel_all_open_orders(client: Client, account_hash: str):
-    open_orders = Order.get_all_orders(
-        account_hash, client, client.Order.Status.PENDING_ACTIVATION
-    )
-    messages = []
-    if len(open_orders) == 0:
-        messages.append(f"No open orders to be closed.")
-    else:
-        for open_order in open_orders:
-            symbol = open_order["orderLegCollection"][0]["instrument"]["symbol"]
-            quantity = open_order["quantity"]
-            filled_quantity = open_order["filledQuantity"]
-            remaining_quantity = open_order["remainingQuantity"]
-            order_id = open_order["orderId"]
-            message = cancel_order(
-                client,
-                order_id,
-                account_hash,
-                symbol,
-                quantity,
-                remaining_quantity,
-                filled_quantity,
-            )
-            messages.append(message + "<br><br>")
-    print(messages)
-    Notification.send_sms_via_email(messages)
+    
+    @staticmethod
+    def cancel_all_open_orders(client: Client, account_hash: str):
+        open_orders = Order.get_all_orders(
+            account_hash, client, client.Order.Status.PENDING_ACTIVATION
+        )
+        messages = []
+        if len(open_orders) == 0:
+            messages.append(f"No open orders to be closed.")
+        else:
+            # TODO Clean this up with Order object
+            for open_order in open_orders:
+                symbol = open_order["orderLegCollection"][0]["instrument"]["symbol"]
+                quantity = open_order["quantity"]
+                filled_quantity = open_order["filledQuantity"]
+                remaining_quantity = open_order["remainingQuantity"]
+                order_id = open_order["orderId"]
+                message = cancel_order(
+                    client,
+                    order_id,
+                    account_hash,
+                    symbol,
+                    quantity,
+                    remaining_quantity,
+                    filled_quantity,
+                )
+                messages.append(message + "<br><br>")
+        print(messages)
+        Notification.send_sms_via_email(messages)
