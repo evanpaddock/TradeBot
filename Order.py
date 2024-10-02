@@ -29,7 +29,7 @@ class Order:
         account_hash: str = None,
         symbol: str = None,
         quantity: int = 0,
-        price: float = None,
+        price: str = None,
         order_id: int = None,
         status: Client.Order.Status = None,
     ):
@@ -41,7 +41,7 @@ class Order:
             account_hash? (int): The hashed ID value of the account.
             symbol? (str): The symbol of the share.
             quantity? (int): The quantity of shares.
-            price? (float): The limit price of the order.
+            price? (str): The limit price of the order.
             order_id? (int): The ID of the order.
             status? (Client.Order.Status): The status of the order.
         """
@@ -155,7 +155,10 @@ class Order:
     def get_all_orders(
         account_hash: str, client: Client, status: Client.Order.Status = None
     ):
-        return client.get_orders_for_account(account_hash, status=status).json()
+        resp = client.get_orders_for_account(account_hash, status=status)
+        assert resp.status_code == httpx.codes.OK
+        orders = resp.json()
+        return orders
     
     @staticmethod
     def cancel_all_open_orders(client: Client, account_hash: str):
@@ -166,9 +169,8 @@ class Order:
         if len(open_orders) == 0:
             messages.append(f"No open orders to be closed.")
         else:
-            # TODO Clean this up with Order object
             for open_order in open_orders:
-                order = Order(client, account_hash, open_order["orderLegCollection"][0]["instrument"]["symbol"], open_order["quantity"], order_id=order_id)
+                order = Order(client, account_hash, open_order["orderLegCollection"][0]["instrument"]["symbol"], open_order["quantity"],open_order["price"] ,open_order["order_id"], open_order["status"])
                 
                 message = order.cancel()
                 messages.append(message + "<br><br>")
