@@ -8,40 +8,55 @@ from schwab.orders.equities import (
 import Notification
 
 
-def buy_order(
-    client: Client, account_hash: str, symbol: str, quantity: int, price: float = None
-):
-    if price:
-        order = equity_buy_limit(symbol, quantity, price)
-    else:
-        order = equity_buy_market(symbol, quantity)
+class Order:
+    def __init__(
+        self, client, account_hash, symbol, quantity, price=None, order_id=None
+    ):
+        self.client = client
+        self.account_hash = account_hash
+        self.symbol = symbol
+        self.quantity = quantity
+        self.price = price
 
-    order_response = client.place_order(account_hash, order)
+    def buy(self):
+        if self.price:
+            order = equity_buy_limit(self.symbol, self.quantity, self.price)
+        else:
+            order = equity_buy_market(self.symbol, self.quantity)
 
-    if order_response:
-        message = f"Order to buy {quantity} share{'s' if quantity > 1 else ''} of {symbol}{f' at {price}' if price != None else ''} was sent successful."
-    else:
-        message = f"Order to buy {quantity} share{'s' if quantity > 1 else ''} of {symbol} has failed. Please check the application for a more specific error."
+        order_response = self.client.place_order(self.account_hash, order)
 
-    Notification.send_sms_via_email(message)
+        if order_response:
+            message = f"Order to buy {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol}{f' at {self.price}' if self.price != None else ''} was sent successful."
+        else:
+            message = f"Order to buy {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol} has failed. Please check the application for a more specific error."
 
+        Notification.send_sms_via_email(message)
 
-def sell_order(
-    client: Client, account_hash: str, symbol: str, quantity: int, price: float = None
-):
-    if price:
-        order = equity_sell_limit(symbol, quantity, price)
-    else:
-        order = equity_sell_market(symbol, quantity)
+    def sell(self):
+        if self.price:
+            order = equity_sell_limit(self.symbol, self.quantity, self.price)
+        else:
+            order = equity_sell_market(self.symbol, self.quantity)
 
-    order_response = client.place_order(account_hash, order)
+        order_response = self.client.place_order(self.account_hash, order)
 
-    if order_response:
-        message = f"Order to sell {quantity} share{'s' if quantity > 1 else ''} of {symbol} was sent successful."
-    else:
-        message = f"Order to sell {quantity} share{'s' if quantity > 1 else ''} of {symbol} has failed. Please check the application for a more specific error."
+        if order_response:
+            message = f"Order to sell {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol}{f' at {self.price}' if self.price != None else ''} was sent successful."
+        else:
+            message = f"Order to sell {self.quantity} share{'s' if self.quantity > 1 else ''} of {self.symbol} has failed. Please check the application for a more specific error."
 
-    Notification.send_sms_via_email(message)
+        Notification.send_sms_via_email(message)
+
+    def cancel(self):
+        # TODO Finish cancel
+        pass
+
+    @staticmethod
+    def get_all_orders(
+        account_hash: str, client: Client, status: Client.Order.Status = None
+    ):
+        return client.get_orders_for_account(account_hash, status=status).json()
 
 
 def cancel_order(
@@ -62,14 +77,8 @@ def cancel_order(
     return message
 
 
-def get_all_orders(
-    account_hash: str, client: Client, status: Client.Order.Status = None
-):
-    return client.get_orders_for_account(account_hash, status=status).json()
-
-
 def cancel_all_open_orders(client: Client, account_hash: str):
-    open_orders = get_all_orders(
+    open_orders = Order.get_all_orders(
         account_hash, client, client.Order.Status.PENDING_ACTIVATION
     )
     messages = []
