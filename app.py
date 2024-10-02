@@ -1,13 +1,12 @@
 import os
 from dotenv import load_dotenv
-import order, account, notification, utils  # Importing custom modules used in the application
+import account, notification, utils, order
 from flask import (
     Flask,
     make_response,
     jsonify,
     request,
 )
-
 
 # Load environment variables from .env file
 load_dotenv(".env")
@@ -30,11 +29,15 @@ def buy_order():
         return "Invalid Buy Order", 400
 
     try:
-        pass
-    except TypeError:
-        pass
+        new_order = order.Order(order_like=order_data)
+        message = new_order.buy()
+        resp = "Order successfully placed.", 200
+    except:
+        message = "There was an issue placing a buy order."
+        resp = "There is an issue with the data being sent.", 400
     finally:
-        return
+        notification.send_sms_via_email(message)
+        return resp
 
 
 @app.route("/Order/Equity/Sell", methods=["POST"])
@@ -44,11 +47,15 @@ def sell_order():
         return "Invalid Sell Order", 400
 
     try:
-        pass
-    except TypeError:
-        pass
+        new_order = order.Order(order_like=order_data)
+        message = new_order.sell()
+        resp = "Order successfully placed.", 200
+    except:
+        message = "There was an issue placing a sell order."
+        resp = "There is an issue with the data being sent.", 400
     finally:
-        return
+        notification.send_sms_via_email(message)
+        return resp
 
 
 @app.route("/shutdown", methods=["POST"])
