@@ -59,15 +59,17 @@ def get_orders():
         return "Invalid Cancel Order", 400
 
     try:
-        order_data["status"]
-    except:
+        order_data["status"]        
+    except:        
         order_data["status"] = None
 
     try:
+        order_status = order.Order.status_dict[order_data["status"]]
+        
         orders = order.Order.get_all_orders(
-            account.account_hash, account.client, order_data["status"]
+            account.account_hash, account.client, order_status
         )
-
+        
         resp = utils.json_rtp(orders), 200
     except:
         resp = "There is an issue with the data being sent.", 400
@@ -98,10 +100,14 @@ def cancel_order():
 def shutdown():
     KEY = request.get_json()["SHUTDOWN_KEY"]
     if KEY == os.getenv("SHUTDOWN_KEY"):
+        print("Ending TradeBot...")
+        
         shutdown_func = request.environ.get("werkzeug.server.shutdown")
+        
         if shutdown_func is None:
             # If not running on Werkzeug, fallback to exit the process
             os._exit(0)  # This forces the app to exit
+            
         shutdown_func()
     else:
         return "Invalid Key", 403
@@ -113,6 +119,5 @@ if __name__ == "__main__":
 
     # Setup client and account_hash by calling the account setup function
     account = account.Account()
-    order.Order.cancel_all_open_orders(account.client, account.account_hash)
-    # app.run(debug=True)
-    print("Ending TradeBot...")
+    
+    app.run(debug=True)

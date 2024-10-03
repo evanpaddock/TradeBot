@@ -15,7 +15,7 @@ import utils
 class Order:
     """A class representing a schwab order."""
 
-    status_dict = {status.name: status.value for status in Client.Order.Status}
+    status_dict = {status.value: status for status in Client.Order.Status}
 
     def __init__(
         self,
