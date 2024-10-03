@@ -36,7 +36,6 @@ class Account:
             client = easy_client(api_key, app_secret, callback_url, token_path)
             return client
         except:
-            input("HERE")
             os.remove(token_path)
             client = easy_client(api_key, app_secret, callback_url, token_path)
             return client

@@ -62,7 +62,7 @@ def get_orders():
         order_data["status"]
     except:
         order_data["status"] = None
-        
+
     try:
         orders = order.Order.get_all_orders(
             account.account_hash, account.client, order_data["status"]
@@ -113,6 +113,6 @@ if __name__ == "__main__":
 
     # Setup client and account_hash by calling the account setup function
     account = account.Account()
-
-    app.run(debug=True)
+    order.Order.cancel_all_open_orders(account.client, account.account_hash)
+    # app.run(debug=True)
     print("Ending TradeBot...")

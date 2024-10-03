@@ -151,7 +151,7 @@ class Order:
         self.client.cancel_order(self.order_id, self.account_hash)
         self.get_order()
 
-        if self.filled_quanitity > 0:
+        if self.filled_quantity > 0:
             message = f"Order {self.order_id} for {self.quantity} shares of {self.symbol} was cancelled, but {self.filled_quanitity} were filled and {self.remaining_quantity} were remianing."
         else:
             message = f"Order {self.order_id} for {self.quantity} shares of {self.symbol} was cancelled"
@@ -197,7 +197,6 @@ class Order:
         Returns:
             list (Order): A list of all retrieved orders
         """
-        input(type(status))
         resp = client.get_orders_for_account(account_hash, status=status)
         assert resp.status_code == httpx.codes.OK
         orders = resp.json()
@@ -215,7 +214,7 @@ class Order:
             list (str): A list of order cancellation messages
         """
         open_orders = Order.get_all_orders(
-            account_hash, client, client.Order.Status.PENDING_ACTIVATION
+            account_hash, client, client.Order.Status.WORKING
         )
         messages = []
         if len(open_orders) == 0:
@@ -228,7 +227,7 @@ class Order:
                     open_order["orderLegCollection"][0]["instrument"]["symbol"],
                     open_order["quantity"],
                     open_order["price"],
-                    open_order["order_id"],
+                    open_order["orderId"],
                     open_order["status"],
                 )
 
