@@ -7,11 +7,15 @@ from schwab.orders.equities import (
     equity_sell_limit,
     equity_sell_market,
 )
+import account
 import notification
+import utils
 
 
 class Order:
     """A class representing a schwab order."""
+
+    status_dict = {status.name: status.value for status in Client.Order.Status}
 
     def __init__(
         self,
@@ -23,6 +27,7 @@ class Order:
         order_id: int = None,
         status: Client.Order.Status = None,
         order_like: dict = None,
+        account: account.Account = None,
     ):
         """Creates an Order object
 
@@ -35,24 +40,24 @@ class Order:
             order_id (int, optional): ID of the order. Defaults to None.
             status (Client.Order.Status, optional): Order status. Defaults to None.
             order_like (dict, optional): A order like object to parse into an order. Defaults to None.
+            account (Account): An active account to pull client and account_hash from. Defaults to None.
         """
+        self.client = client
+        self.account_hash = account_hash
+        self.symbol = symbol
+        self.quantity = quantity
+        self.price = price
+        self.order_id = order_id
+        self.status = status
+
         if order_like:
-            order = json.loads(order_like)
-            self.client = order["client"]
-            self.account_hash = order["account_hash"]
+            order = order_like
             self.symbol = order["symbol"]
             self.quantity = order["quantity"]
             self.price = order["price"]
-            self.order_id = order["order_id"]
-            self.status = order["status"]
-        else:
-            self.client = client
-            self.account_hash = account_hash
-            self.symbol = symbol
-            self.quantity = quantity
-            self.price = price
-            self.order_id = order_id
-            self.status = status
+        if account:
+            self.client = account.client
+            self.account_hash = account.account_hash
 
     def __str__(self):
         """Print Current Order Details
@@ -62,8 +67,7 @@ class Order:
         """
         message = ""
 
-        for field, value in vars(self).items():
-            message += f"{field}: {value}"
+        message = utils.json_rtp(self)
 
         return message
 
@@ -113,6 +117,7 @@ class Order:
 
         if not self.quantity:
             raise TypeError("quantity must be defined.")
+
         if self.price:
             order = equity_sell_limit(self.symbol, self.quantity, self.price)
         else:
@@ -175,7 +180,6 @@ class Order:
             self.quantity = order_details["quantity"]
             self.filled_quantity = order_details["filledQuantity"]
             self.remaining_quantity = order_details["remainingQuantity"]
-            self.order_id = order_details["orderId"]
         else:
             raise ValueError(f"There was an error processing the order")
 
@@ -193,6 +197,7 @@ class Order:
         Returns:
             list (Order): A list of all retrieved orders
         """
+        input(type(status))
         resp = client.get_orders_for_account(account_hash, status=status)
         assert resp.status_code == httpx.codes.OK
         orders = resp.json()

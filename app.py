@@ -8,12 +8,6 @@ from flask import (
     request,
 )
 
-# Load environment variables from .env file
-load_dotenv(".env")
-
-# Setup client and account_hash by calling the account setup function
-client, account_hash = account.setup()
-
 app = Flask(__name__)
 
 
@@ -27,16 +21,15 @@ def buy_order():
     order_data = request.get_json()
     if order_data["type"] != "BUY":
         return "Invalid Buy Order", 400
-
     try:
-        new_order = order.Order(order_like=order_data)
+        new_order = order.Order(order_like=order_data, account=account)
         message = new_order.buy()
         resp = "Order successfully placed.", 200
     except:
         message = "There was an issue placing a buy order."
         resp = "There is an issue with the data being sent.", 400
     finally:
-        notification.send_sms_via_email(message)
+        # notification.send_sms_via_email(message)
         return resp
 
 
@@ -47,14 +40,57 @@ def sell_order():
         return "Invalid Sell Order", 400
 
     try:
-        new_order = order.Order(order_like=order_data)
+        new_order = order.Order(order_like=order_data, account=account)
+        input(new_order)
         message = new_order.sell()
         resp = "Order successfully placed.", 200
     except:
         message = "There was an issue placing a sell order."
         resp = "There is an issue with the data being sent.", 400
     finally:
-        notification.send_sms_via_email(message)
+        # notification.send_sms_via_email(message)
+        return resp
+
+
+@app.route("/Order/Equity/Get", methods=["POST"])
+def get_orders():
+    order_data = request.get_json()
+    if order_data["type"] != "CANCEL":
+        return "Invalid Cancel Order", 400
+
+    try:
+        order_data["status"]
+    except:
+        order_data["status"] = None
+        
+    try:
+        orders = order.Order.get_all_orders(
+            account.account_hash, account.client, order_data["status"]
+        )
+
+        resp = utils.json_rtp(orders), 200
+    except:
+        resp = "There is an issue with the data being sent.", 400
+    finally:
+        return resp
+
+
+@app.route("/Order/Equity/Cancel", methods=["POST"])
+def cancel_order():
+    order_data = request.get_json()
+    if order_data["type"] != "CANCEL":
+        return "Invalid Cancel Order", 400
+
+    try:
+        new_order = order.Order(order_id=order_data["order_id"], account=account)
+        new_order.get_order()
+        message = new_order.cancel()
+        resp = "Order successfully cancelled.", 200
+    except:
+        message = "There was an issue placing a cancel order."
+        resp = "There is an issue with the data being sent.", 400
+    finally:
+        # notification.send_sms_via_email(message)
         return resp
 
 
@@ -72,5 +108,11 @@ def shutdown():
 
 
 if __name__ == "__main__":
+    # Load environment variables from .env file
+    load_dotenv(".env")
+
+    # Setup client and account_hash by calling the account setup function
+    account = account.Account()
+
     app.run(debug=True)
     print("Ending TradeBot...")
