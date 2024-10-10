@@ -1,12 +1,16 @@
 import os
 from dotenv import load_dotenv
-import account, notification, utils, order
+from account import Account
+from notification import Notification
+from order_types import Equity
 from flask import (
     Flask,
     make_response,
     jsonify,
     request,
 )
+
+import utils
 
 app = Flask(__name__)
 
@@ -22,14 +26,17 @@ def buy_order():
     if order_data["type"] != "BUY":
         return "Invalid Buy Order", 400
     try:
-        new_order = order.Order(order_like=order_data, account=account)
+        new_order = Equity(
+            account=account, order_like=order_data, notification=notification
+        )
         message = new_order.buy()
         resp = "Order successfully placed.", 200
     except:
-        message = "There was an issue placing a buy order."
+        message = "Failed to buy an order."
         resp = "There is an issue with the data being sent.", 400
     finally:
-        # notification.send_sms_via_email(message)
+        if notification and message:
+            notification.send_sms_via_email(message)
         return resp
 
 
@@ -40,7 +47,9 @@ def sell_order():
         return "Invalid Sell Order", 400
 
     try:
-        new_order = order.Order(order_like=order_data, account=account)
+        new_order = Equity(
+            order_like=order_data, account=account, notification=notification
+        )
         input(new_order)
         message = new_order.sell()
         resp = "Order successfully placed.", 200
@@ -48,28 +57,30 @@ def sell_order():
         message = "There was an issue placing a sell order."
         resp = "There is an issue with the data being sent.", 400
     finally:
-        # notification.send_sms_via_email(message)
+        if notification and message:
+            notification.send_sms_via_email(message)
         return resp
 
 
 @app.route("/Order/Equity/Get", methods=["POST"])
 def get_orders():
     order_data = request.get_json()
-    if order_data["type"] != "CANCEL":
-        return "Invalid Cancel Order", 400
+    if order_data["type"] != "Get":
+        return "Invalid Get Order", 400
 
     try:
-        order_data["status"]        
-    except:        
-        order_data["status"] = None
+        order_status = order_data["status"]
+    except:
+        order_status = None
 
     try:
-        order_status = order.Order.status_dict[order_data["status"]]
-        
-        orders = order.Order.get_all_orders(
+        if order_status:
+            order_status = Equity.status_dict[order_data["status"]]
+
+        orders = Equity.get_all_orders(
             account.account_hash, account.client, order_status
         )
-        
+
         resp = utils.json_rtp(orders), 200
     except:
         resp = "There is an issue with the data being sent.", 400
@@ -84,7 +95,9 @@ def cancel_order():
         return "Invalid Cancel Order", 400
 
     try:
-        new_order = order.Order(order_id=order_data["order_id"], account=account)
+        new_order = Equity(
+            order_id=order_data["order_id"], account=account, notification=notification
+        )
         new_order.get_order()
         message = new_order.cancel()
         resp = "Order successfully cancelled.", 200
@@ -92,7 +105,8 @@ def cancel_order():
         message = "There was an issue placing a cancel order."
         resp = "There is an issue with the data being sent.", 400
     finally:
-        # notification.send_sms_via_email(message)
+        if notification and message:
+            notification.send_sms_via_email(message)
         return resp
 
 
@@ -101,13 +115,16 @@ def shutdown():
     KEY = request.get_json()["SHUTDOWN_KEY"]
     if KEY == os.getenv("SHUTDOWN_KEY"):
         print("Ending TradeBot...")
-        
+
+        if notification:
+            notification.send_sms_via_email("Ending TradeBot...")
+
         shutdown_func = request.environ.get("werkzeug.server.shutdown")
-        
+
         if shutdown_func is None:
             # If not running on Werkzeug, fallback to exit the process
             os._exit(0)  # This forces the app to exit
-            
+
         shutdown_func()
     else:
         return "Invalid Key", 403
@@ -118,6 +135,9 @@ if __name__ == "__main__":
     load_dotenv(".env")
 
     # Setup client and account_hash by calling the account setup function
-    account = account.Account()
-    
+    account = Account()
+
+    # notification = Notification()
+    notification = None
+
     app.run(debug=True)

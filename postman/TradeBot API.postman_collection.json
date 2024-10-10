@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "09945170-24ff-4f93-85e7-f4bbd52a8887",
+		"name": "TradeBot API",
+		"description": "API collection for testing TradeBot Flask app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30269998"
+	},
+	"item": [
+		{
+			"name": "GET Welcome",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Buy Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": \"BUY\",\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"price\": 150.0\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/Order/Equity/Buy",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"Order",
+						"Equity",
+						"Buy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Sell Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": \"SELL\",\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"price\": 150.0\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/Order/Equity/Sell",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"Order",
+						"Equity",
+						"Sell"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Get Orders",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": \"Get\",\n  \"status\": \"None\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/Order/Equity/Get",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"Order",
+						"Equity",
+						"Get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Cancel Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": \"CANCEL\",\n  \"order_id\": \"YOUR_ORDER_ID\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/Order/Equity/Cancel",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"Order",
+						"Equity",
+						"Cancel"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Shutdown",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"SHUTDOWN_KEY\": \"YOUR_SHUTDOWN_KEY\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/shutdown",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"shutdown"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

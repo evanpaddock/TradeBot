@@ -8,21 +8,21 @@ class Account:
             self.client = client
             self.account_hash = account_hash
         else:
-            self.client, self.account_hash = Account.setup()
+            self.client, self.account_hash = Account._setup()
 
     @staticmethod
-    def setup():
-        client = Account.get_client()
-        account_hash = Account.get_account_hash(client)
+    def _setup():
+        client = Account._get_client()
+        account_hash = Account._get_account_hash(client)
         return (client, account_hash)
 
     @staticmethod
-    def get_account_hash(client: Client) -> any:
+    def _get_account_hash(client: Client) -> any:
         accountHash = client.get_account_numbers().json()[0]["hashValue"]
         return accountHash
 
     @staticmethod
-    def get_client():
+    def _get_client():
         """Get's a client object to access a schwab account.
 
         Returns:
