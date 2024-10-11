@@ -152,10 +152,10 @@ class Equity:
         if not self.order_id:
             raise TypeError("order_id must be defined.")
 
-        if not self.account_hash:
+        if not self.account.account_hash:
             raise TypeError("account_hash must be defined.")
 
-        self.account.client.cancel_order(self.order_id, self.account_hash)
+        self.account.client.cancel_order(self.order_id, self.account.account_hash)
         self.get_order()
 
         if self.filled_quantity > 0:
@@ -178,7 +178,7 @@ class Equity:
         """
         if not self.order_id:
             raise TypeError("order_id must be defined.")
-        if not self.client:
+        if not self.account.client:
             raise TypeError("client must be defined.")
 
         resp = self.account.client.get_order(self.order_id, self.account.account_hash)

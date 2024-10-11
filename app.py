@@ -31,9 +31,9 @@ def buy_order():
         )
         message = new_order.buy()
         resp = "Order successfully placed.", 200
-    except:
-        message = "Failed to buy an order."
-        resp = "There is an issue with the data being sent.", 400
+    except Exception as e:
+        message = f"Failed to buy an order. Error: {e}"
+        resp = f"There is an issue with the data being sent. Error: {e}", 400
     finally:
         if notification and message:
             notification.send_sms_via_email(message)
@@ -53,9 +53,9 @@ def sell_order():
         input(new_order)
         message = new_order.sell()
         resp = "Order successfully placed.", 200
-    except:
-        message = "There was an issue placing a sell order."
-        resp = "There is an issue with the data being sent.", 400
+    except Exception as e:
+        message = f"Failed to place a sell order. Error: {e}"
+        resp = f"There is an issue with the data being sent. Error: {e}", 400
     finally:
         if notification and message:
             notification.send_sms_via_email(message)
@@ -82,8 +82,8 @@ def get_orders():
         )
 
         resp = utils.json_rtp(orders), 200
-    except:
-        resp = "There is an issue with the data being sent.", 400
+    except Exception as e:
+        resp = f"Failed to buy an order. Error: {e}", 400
     finally:
         return resp
 
@@ -101,9 +101,9 @@ def cancel_order():
         new_order.get_order()
         message = new_order.cancel()
         resp = "Order successfully cancelled.", 200
-    except:
-        message = "There was an issue placing a cancel order."
-        resp = "There is an issue with the data being sent.", 400
+    except Exception as e:
+        message = f"There was an issue placing a cancel order. Error: {e}"
+        resp = f"There is an issue with the data being sent. Error: {e}", 400
     finally:
         if notification and message:
             notification.send_sms_via_email(message)
